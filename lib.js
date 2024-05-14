@@ -618,9 +618,9 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
             <path class="arrow" ${makeId("arrow", () => {
                 return {
                     d: [
-                        "M", arrowX - trustX(arrowAngle + arrowPitch, arrowLength), arrowY - trustY(arrowAngle + arrowPitch, 7),
+                        "M", arrowX - trustX(arrowAngle + arrowPitch, arrowLength), arrowY - trustY(arrowAngle + arrowPitch, arrowLength),
                         "L", arrowX, arrowY,
-                        "L", arrowX - trustX(arrowAngle - arrowPitch, arrowLength), arrowY - trustY(arrowAngle - arrowPitch, 7)
+                        "L", arrowX - trustX(arrowAngle - arrowPitch, arrowLength), arrowY - trustY(arrowAngle - arrowPitch, arrowLength)
                     ].join(" ")
                 };
             })} style="fill: black; stroke-width: 1px"/>
