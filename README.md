@@ -34,7 +34,7 @@ const fusedCanvas = createFusedCanvas({
 
 /*
 createFusedCanvas returns an object with the following properties:
-*/
+
 interface FusedCanvas {
     container: HTMLElement; // This is the viewport element
     view: {
