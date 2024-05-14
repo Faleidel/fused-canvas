@@ -38,6 +38,7 @@ const fusedCanvas = createFusedCanvas({
     scrollCtrlAction: "zoom", // Can be scroll or zoom
     fitToScreen: true, // If true the canvas will fit to the screen on init
     yScaling: 1, // The scaling of the y axis, is used to compress the y axis when using dagre layout
+    arrowLength: 7, // The length of the arrow head edges
     // possible values are "TB", "BT", "LR", "RL" or null
     // null will do no automatic layouting. TB means top to bottom, BT means bottom to top, LR means left to right and RL means right to left
     dagre: null,

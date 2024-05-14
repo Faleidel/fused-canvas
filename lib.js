@@ -57,6 +57,7 @@ function createFusedCanvas({
     scrollCtrlAction = "zoom",
     fitToScreen = true,
     yScaling = 3, // When using dagrejs compound=true there is more y space, I don't know why
+    arrowLength = 7
     dagre = null
 }) {
     let mouseDownActions = [mouseDown0Action, mouseDown1Action, mouseDown2Action];
@@ -247,11 +248,11 @@ function createFusedCanvas({
         if (dagre) {
             handleDagre(canvas, dagre, yScaling);
         }
-        canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling));
+        canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength));
 //        list.forEach(record => {
 //            record.addedNodes.forEach(node => {
 //                if (node.tagName == "EDGE") {
-//                    createBasicEdge(node, yScaling);
+//                    createBasicEdge(node, yScaling, arrowLength);
 //                }
 //            })
 //        });
@@ -316,7 +317,7 @@ function createFusedCanvas({
     }
     if (fitToScreen) doFitToScreen();
     
-    canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling));
+    canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength));
     
     return {
         container: canvas,
@@ -447,7 +448,7 @@ requireCSS(`
         background: black;
     }
 `);
-function createBasicEdge(div, yScaling) {
+function createBasicEdge(div, yScaling, arrowLength) {
     //if (!div) div = document.createElement("div");
     div.innerHTML = "";
     let from = document.getElementById(div.getAttribute("data-from"));
@@ -616,9 +617,9 @@ function createBasicEdge(div, yScaling) {
             <path class="arrow" ${makeId("arrow", () => {
                 return {
                     d: [
-                        "M", arrowX - trustX(arrowAngle + 30, 7), arrowY - trustY(arrowAngle + 30, 7),
+                        "M", arrowX - trustX(arrowAngle + 30, arrowLength), arrowY - trustY(arrowAngle + 30, 7),
                         "L", arrowX, arrowY,
-                        "L", arrowX - trustX(arrowAngle - 30, 7), arrowY - trustY(arrowAngle - 30, 7)
+                        "L", arrowX - trustX(arrowAngle - 30, arrowLength), arrowY - trustY(arrowAngle - 30, 7)
                     ].join(" ")
                 };
             })} style="fill: black; stroke-width: 1px"/>
