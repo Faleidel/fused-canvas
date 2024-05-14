@@ -1,5 +1,5 @@
 <h1 align="center">fused-canvas</h1>
-<h2 align="center">an easy to use framework agnostic graph canvas library</h1>
+<p align="center">an easy to use framework agnostic graph canvas library</p>
 
 ![image](https://github.com/Faleidel/fused-canvas/assets/4857465/9206d041-a38d-41df-bc4f-6675a2098db2)
 
