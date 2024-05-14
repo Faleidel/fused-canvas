@@ -58,6 +58,7 @@ function createFusedCanvas({
     fitToScreen = true,
     yScaling = 3, // When using dagrejs compound=true there is more y space, I don't know why
     arrowLength = 7,
+    arrowPitch = 30,
     dagre = null
 }) {
     let mouseDownActions = [mouseDown0Action, mouseDown1Action, mouseDown2Action];
@@ -248,11 +249,11 @@ function createFusedCanvas({
         if (dagre) {
             handleDagre(canvas, dagre, yScaling);
         }
-        canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength));
+        canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
 //        list.forEach(record => {
 //            record.addedNodes.forEach(node => {
 //                if (node.tagName == "EDGE") {
-//                    createBasicEdge(node, yScaling, arrowLength);
+//                    createBasicEdge(node, yScaling, arrowLength, arrowPitch);
 //                }
 //            })
 //        });
@@ -317,7 +318,7 @@ function createFusedCanvas({
     }
     if (fitToScreen) doFitToScreen();
     
-    canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength));
+    canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
     
     return {
         container: canvas,
@@ -448,7 +449,7 @@ requireCSS(`
         background: black;
     }
 `);
-function createBasicEdge(div, yScaling, arrowLength) {
+function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
     //if (!div) div = document.createElement("div");
     div.innerHTML = "";
     let from = document.getElementById(div.getAttribute("data-from"));
@@ -617,9 +618,9 @@ function createBasicEdge(div, yScaling, arrowLength) {
             <path class="arrow" ${makeId("arrow", () => {
                 return {
                     d: [
-                        "M", arrowX - trustX(arrowAngle + 30, arrowLength), arrowY - trustY(arrowAngle + 30, 7),
+                        "M", arrowX - trustX(arrowAngle + arrowPitch, arrowLength), arrowY - trustY(arrowAngle + arrowPitch, 7),
                         "L", arrowX, arrowY,
-                        "L", arrowX - trustX(arrowAngle - 30, arrowLength), arrowY - trustY(arrowAngle - 30, 7)
+                        "L", arrowX - trustX(arrowAngle - arrowPitch, arrowLength), arrowY - trustY(arrowAngle - arrowPitch, 7)
                     ].join(" ")
                 };
             })} style="fill: black; stroke-width: 1px"/>

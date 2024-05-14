@@ -20,6 +20,7 @@ declare module "fused-canvas" {
         fitToScreen?: boolean;
         yScaling?: number;
         arrowLength?: number;
+        arrowPitch?: number;
         dagre?: string;
     }): FusedCanvas;
 }
