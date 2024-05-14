@@ -1,5 +1,5 @@
 declare module "fused-canvas" {
-    export function createFusedCanvas(): (options: {
+    export function createFusedCanvas(options: {
         viewport: HTMLElement,
         canvas: HTMLElement,
         mouseDown0Action?: string,
