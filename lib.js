@@ -57,7 +57,7 @@ function createFusedCanvas({
     scrollCtrlAction = "zoom",
     fitToScreen = true,
     yScaling = 3, // When using dagrejs compound=true there is more y space, I don't know why
-    arrowLength = 7
+    arrowLength = 7,
     dagre = null
 }) {
     let mouseDownActions = [mouseDown0Action, mouseDown1Action, mouseDown2Action];
