@@ -19,6 +19,7 @@ declare module "fused-canvas" {
         scrollCtrlAction?: string;
         fitToScreen?: boolean;
         yScaling?: number;
+        arrowLength?: number;
         dagre?: string;
     }): FusedCanvas;
 }
