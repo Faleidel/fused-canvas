@@ -1,4 +1,4 @@
-# fused-canvas an easy to use framework agnostic graph canvas library
+# fused-canvas is an easy to use framework agnostic graph canvas library
 
 ![image](https://github.com/Faleidel/fused-canvas/assets/4857465/9206d041-a38d-41df-bc4f-6675a2098db2)
 
