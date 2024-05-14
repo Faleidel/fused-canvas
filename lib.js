@@ -9,7 +9,7 @@ const {
     trustY,
     hasParentWhich
 } = require("./utils");
-const dagre = require("dagre");
+const dagre = require("@dagrejs/dagre");
 
 requireCSS(`
 .fused-canvas-component {
