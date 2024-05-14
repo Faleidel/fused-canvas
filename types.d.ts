@@ -10,7 +10,7 @@ declare module "fused-canvas" {
         fitToScreen?: boolean,
         yScaling?: number,
         dagre?: string
-    }) => {
+    }): {
         container: HTMLElement,
         view: { panX: number, panY: number, zoom: number },
         fitToScreen: () => void,
