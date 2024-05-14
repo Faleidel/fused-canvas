@@ -10,9 +10,17 @@
 import { FusedCanvas, createFusedCanvas } from 'fused-canvas';
 
 /*
-<!-- You need to provide these elements to the createFusedCanvas function. You don't need these specific id's (or any id's at all) just two divs one in the other -->
+<!-- You need to provide the viewport and canvas to the createFusedCanvas function. You don't need these specific id's (or any id's at all) just two divs one in the other-->
 <div id="viewport">
     <div id="canvas">
+        <!-- To add a box to the graph you add a div with the class fused-canvas-component. Providing an id is optional -->
+        <!-- Boxes, edges and clusters can be added before and after the initialization of the canvas -->
+        <div id="box1" class="fused-canvas-component">Basic box 1</div>
+        <div id="box2" class="fused-canvas-component">Basic box 2</div>
+        <!-- To add an edge between boxes you provide and edge element with from and to containing id's -->
+        <edge data-from="box1" data-to="box2"></edge>
+        <!-- You can also create clusters which are group of nodes. The children are defined by a list of id separated by "," -->
+        <cluster id="cluster1" data-children="box1,box2"></cluster>
     </div>
 </div>
 */
@@ -27,10 +35,16 @@ const fusedCanvas = createFusedCanvas({
     scrollCtrlAction: "zoom", // Can be scroll or zoom
     fitToScreen: true, // If true the canvas will fit to the screen on init
     yScaling: 1, // The scaling of the y axis, is used to compress the y axis when using dagre layout
-    //possible values are "TB", "BT", "LR", "RL" or null
+    // possible values are "TB", "BT", "LR", "RL" or null
     // null will do no automatic layouting. TB means top to bottom, BT means bottom to top, LR means left to right and RL means right to left
     dagre: null,
 });
+
+// Elements can be added after the initialization of the canvas like this
+const box3 = document.createElement('div');
+box3.classList.add('fused-canvas-component');
+box3.textContent = 'Basic box 3';
+fusedCanvas.container.appendChild(box3);
 
 /*
 createFusedCanvas returns an object with the following properties:
