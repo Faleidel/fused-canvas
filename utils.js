@@ -367,5 +367,6 @@ module.exports = {
     getAngle,
     trustX,
     trustY,
-    hasParentWhich
+    hasParentWhich,
+    onDrag
 };
