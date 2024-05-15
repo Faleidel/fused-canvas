@@ -454,7 +454,7 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
     div.innerHTML = "";
     let from = document.getElementById(div.getAttribute("data-from"));
     let to   = document.getElementById(div.getAttribute("data-to"  ));
-    let points = JSON.parse(div.getAttribute("data-points") || "[]").points;
+    let points = JSON.parse(div.getAttribute("data-points") || JSON.stringify({points: []})).points;
     points.forEach(point => point.y = point.y/yScaling);
     
     div.classList.add("lineObject");
@@ -478,8 +478,8 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
 //            , y: parseFloat(from.style.top)
 //            , dx: 0, dy: -1
 //            },
-            { x: parseFloat(from.style.left) + boundsFrom.width/2/view.zoom
-            , y: parseFloat(from.style.top) + boundsFrom.height/view.zoom
+            { x: parseFloat(from.style.left || "0") + boundsFrom.width/2/view.zoom
+            , y: parseFloat(from.style.top || "0") + boundsFrom.height/view.zoom
             , dx: 0, dy: 1
             },
 //            { x: parseFloat(from.style.left)
@@ -492,8 +492,8 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
 //            },
         ];
         let attachesTo = [
-            { x: parseFloat(to.style.left) + boundsTo.width/2/view.zoom
-            , y: parseFloat(to.style.top)
+            { x: parseFloat(to.style.left || "0") + boundsTo.width/2/view.zoom
+            , y: parseFloat(to.style.top || "0")
             , dx: 0, dy: -1
             },
 //            { x: parseFloat(to.style.left) + boundsTo.width/2/view.zoom
@@ -574,10 +574,12 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
     let arrowX = line.x2 - lineBounds.x + halfPadding;
     let arrowY = line.y2 - lineBounds.y + halfPadding;
     
-    let lastPoint = points.length-1;
-    arrowAngle = getAngle(points[lastPoint-1].x, points[lastPoint-1].y, points[lastPoint].x, points[lastPoint].y);
-    arrowX = points[lastPoint].x - lineBounds.x + halfPadding;
-    arrowY = points[lastPoint].y - lineBounds.y + halfPadding;
+    if (points.length != 0) {
+        let lastPoint = points.length-1;
+        arrowAngle = getAngle(points[lastPoint-1].x, points[lastPoint-1].y, points[lastPoint].x, points[lastPoint].y);
+        arrowX = points[lastPoint].x - lineBounds.x + halfPadding;
+        arrowY = points[lastPoint].y - lineBounds.y + halfPadding;
+    }
     
     let refs = $(div, makeId => `
         <svg style="position: relative" ${makeId("svg", () => ({
@@ -593,27 +595,29 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
                 let endX = line.x2 - lineBounds.x + halfPadding;
                 let endY = line.y2 - lineBounds.y + halfPadding;
                 
-                // For hand made bezier
-//                let d = [
-//                    "M", startX, startY,
-//                    "C",
-//                    startX + bezierDeltaX, startY + bezierDeltaY + ",",
-//                    endX   - bezierDeltaX, endY   - bezierDeltaY + ",",
-//                    endX                 , endY
-//                ].join(" ");
-                
-                let dArray = [
-                    "M", points[0].x + halfPadding - lineBounds.x, points[0].y + halfPadding - lineBounds.y,
-                    "Q", points[1].x + halfPadding - lineBounds.x, points[1].y + halfPadding - lineBounds.y,
-                         points[2].x + halfPadding - lineBounds.x, points[2].y + halfPadding - lineBounds.y
-                ];
-                
-                let rest = points.slice(3);
-                for (let pi = 0 ; pi < rest.length ; pi += 1) {
-                    dArray.push("T", rest[pi].x + halfPadding - lineBounds.x, rest[pi].y + halfPadding - lineBounds.y);
+                if (points.length == 0) {
+                    let d = [
+                       "M", startX, startY,
+                        "C",
+                        startX + bezierDeltaX, startY + bezierDeltaY + ",",
+                        endX   - bezierDeltaX, endY   - bezierDeltaY + ",",
+                        endX                 , endY
+                    ].join(" ");
+                    return { d };
+                } else {
+                    let dArray = [
+                        "M", points[0].x + halfPadding - lineBounds.x, points[0].y + halfPadding - lineBounds.y,
+                        "Q", points[1].x + halfPadding - lineBounds.x, points[1].y + halfPadding - lineBounds.y,
+                             points[2].x + halfPadding - lineBounds.x, points[2].y + halfPadding - lineBounds.y
+                    ];
+                    
+                    let rest = points.slice(3);
+                    for (let pi = 0 ; pi < rest.length ; pi += 1) {
+                        dArray.push("T", rest[pi].x + halfPadding - lineBounds.x, rest[pi].y + halfPadding - lineBounds.y);
+                    }
+                    
+                    return { d: dArray.join(" ") };
                 }
-                
-                return { d: dArray.join(" ") };
             })} style="fill: none; stroke: black; stroke-width: 1px"/>
             <path class="arrow" ${makeId("arrow", () => {
                 return {
