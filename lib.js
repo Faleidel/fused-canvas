@@ -534,17 +534,19 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
         line.x2 = attachTo.x;
         line.y2 = attachTo.y;
         
-//        lineBounds.x = Math.min(line.x, line.x2);
-//        lineBounds.y = Math.min(line.y, line.y2);
-//        lineBounds.width = Math.abs(line.x - line.x2);
-//        lineBounds.height = Math.abs(line.y - line.y2);
-        
-        lineBounds.x = Math.min(...points.map(p => p.x));
-        lineBounds.y = Math.min(...points.map(p => p.y));
-        let maxX = Math.max(...points.map(p => p.x));
-        let maxY = Math.max(...points.map(p => p.y));
-        lineBounds.width = Math.abs(lineBounds.x - maxX);
-        lineBounds.height = Math.abs(lineBounds.y - maxY);
+        if (points.length == 0) {
+            lineBounds.x = Math.min(line.x, line.x2);
+            lineBounds.y = Math.min(line.y, line.y2);
+            lineBounds.width = Math.abs(line.x - line.x2);
+            lineBounds.height = Math.abs(line.y - line.y2);
+        } else {
+            lineBounds.x = Math.min(...points.map(p => p.x));
+            lineBounds.y = Math.min(...points.map(p => p.y));
+            let maxX = Math.max(...points.map(p => p.x));
+            let maxY = Math.max(...points.map(p => p.y));
+            lineBounds.width = Math.abs(lineBounds.x - maxX);
+            lineBounds.height = Math.abs(lineBounds.y - maxY);
+        }
         
         div.style.left = lineBounds.x + "px";
         div.style.top  = lineBounds.y + "px";

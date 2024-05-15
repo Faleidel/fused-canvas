@@ -1,6 +1,6 @@
 {
     "name": "fused-canvas",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "types": "types.d.ts",
     "dependencies": {
         "@dagrejs/dagre": "^1.1.2"
