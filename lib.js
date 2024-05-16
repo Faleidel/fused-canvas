@@ -587,7 +587,7 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
     }
     updateEverything();
     
-    let padding = 300;
+    let padding = 50;
     let halfPadding = padding/2;
     
     let bezierStrength = Math.abs(line.y - line.y2);
@@ -621,8 +621,8 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
                 left: -halfPadding + "px",
                 top: -halfPadding + "px",
             },
-            width: Math.abs(line.x - line.x2) + padding,
-            height: Math.abs(line.y - line.y2) + padding }))}>
+            width: lineBounds.width + padding,
+            height: lineBounds.height + padding }))}>
             <path ${makeId("clickLine2", () => {
                 let startX = line.x - lineBounds.x + halfPadding;
                 let startY = line.y - lineBounds.y + halfPadding;
