@@ -485,6 +485,9 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
     let boundsFrom = from.getBoundingClientRect();
     let boundsTo   = to.getBoundingClientRect();
     
+    let directionFrom = 0;
+    let directionTo = 0;
+    
     function updateEverything() {
         let cs = getComputedStyle(div);
         view.zoom = cs.getPropertyValue('--zoom');
@@ -492,40 +495,40 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
         view.panY = cs.getPropertyValue('--panY');
         
         let attachesFrom = [
-//            { x: parseFloat(from.style.left) + boundsFrom.width/2/view.zoom
-//            , y: parseFloat(from.style.top)
-//            , dx: 0, dy: -1
-//            },
+            { x: parseFloat(from.style.left || "0") + boundsFrom.width/2/view.zoom
+            , y: parseFloat(from.style.top || "0")
+            , dx: 0, dy: -1
+            },
             { x: parseFloat(from.style.left || "0") + boundsFrom.width/2/view.zoom
             , y: parseFloat(from.style.top || "0") + boundsFrom.height/view.zoom
             , dx: 0, dy: 1
             },
-//            { x: parseFloat(from.style.left)
-//            , y: parseFloat(from.style.top) + boundsFrom.height/2/view.zoom
-//            , dx: -1, dy: 0
-//            },
-//            { x: parseFloat(from.style.left) + boundsFrom.width/view.zoom
-//            , y: parseFloat(from.style.top) + boundsFrom.height/2/view.zoom
-//            , dx: 1, dy: 0
-//            },
+            { x: parseFloat(from.style.left || "0")
+            , y: parseFloat(from.style.top || "0") + boundsFrom.height/2/view.zoom
+            , dx: -1, dy: 0
+            },
+            { x: parseFloat(from.style.left || "0") + boundsFrom.width/view.zoom
+            , y: parseFloat(from.style.top || "0") + boundsFrom.height/2/view.zoom
+            , dx: 1, dy: 0
+            },
         ];
         let attachesTo = [
             { x: parseFloat(to.style.left || "0") + boundsTo.width/2/view.zoom
             , y: parseFloat(to.style.top || "0")
             , dx: 0, dy: -1
             },
-//            { x: parseFloat(to.style.left) + boundsTo.width/2/view.zoom
-//            , y: parseFloat(to.style.top) + boundsTo.height/view.zoom
-//            , dx: 0, dy: 1
-//            },
-//            { x: parseFloat(to.style.left)
-//            , y: parseFloat(to.style.top) + boundsTo.height/2/view.zoom
-//            , dx: -1, dy: 0
-//            },
-//            { x: parseFloat(to.style.left) + boundsTo.width/view.zoom
-//            , y: parseFloat(to.style.top) + boundsTo.height/2/view.zoom
-//            , dx: 1, dy: 0
-//            },
+            { x: parseFloat(to.style.left || "0") + boundsTo.width/2/view.zoom
+            , y: parseFloat(to.style.top || "0") + boundsTo.height/view.zoom
+            , dx: 0, dy: 1
+            },
+            { x: parseFloat(to.style.left || "0")
+            , y: parseFloat(to.style.top || "0") + boundsTo.height/2/view.zoom
+            , dx: -1, dy: 0
+            },
+            { x: parseFloat(to.style.left || "0") + boundsTo.width/view.zoom
+            , y: parseFloat(to.style.top || "0") + boundsTo.height/2/view.zoom
+            , dx: 1, dy: 0
+            },
         ];
         
         let minDistance = Infinity;
@@ -546,6 +549,18 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
         
         let attachFrom = closestPair[0];
         let attachTo = closestPair[1];
+        directionFrom = {
+            "1,0": 0,
+            "0,1": 1,
+            "-1,0": 2,
+            "0,-1": 3
+        }[closestPair[0].dx + "," + closestPair[0].dy];
+        directionTo = {
+            "-1,0": 0,
+            "0,-1": 1,
+            "1,0": 2,
+            "0,1": 3
+        }[closestPair[1].dx + "," + closestPair[1].dy];
         
         line.x = attachFrom.x;
         line.y = attachFrom.y;
@@ -574,23 +589,21 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
     let padding = 300;
     let halfPadding = padding/2;
     
-    let direction = Math.round(getAngle(line.x, line.y, line.x2, line.y2)/90);
-    let isHorizontal = direction == 2 || direction == 0;
+    let bezierStrength = Math.abs(line.y - line.y2);
     
-    while (direction < 0) direction += 4;
-    while (direction > 3) direction -= 4;
+    let bezierDeltaXFrom = (directionFrom == 0 || directionFrom == 2) ? bezierStrength : 0;
+    let bezierDeltaYFrom = (directionFrom == 0 || directionFrom == 2) ? 0 : -bezierStrength;
+    bezierDeltaXFrom *= directionFrom == 2 ? -1 : 1;
+    bezierDeltaYFrom *= directionFrom == 1 ? -1 : 1;
     
-    direction = 1
+    let bezierDeltaXTo = (directionTo == 0 || directionTo == 2) ? bezierStrength : 0;
+    let bezierDeltaYTo = (directionTo == 0 || directionTo == 2) ? 0 : -bezierStrength;
+    bezierDeltaXTo *= directionTo == 2 ? -1 : 1;
+    bezierDeltaYTo *= directionTo == 1 ? -1 : 1;
     
-    let bezierStrength = 100;
-    bezierStrength = Math.abs(line.y - line.y2);
-    let bezierDeltaX = (direction == 0 || direction == 2) ? bezierStrength : 0;
-    let bezierDeltaY = (direction == 0 || direction == 2) ? 0 : -bezierStrength;
+    if (points.length != 0) directionFrom = 1;
     
-    bezierDeltaX *= direction == 2 ? -1 : 1;
-    bezierDeltaY *= direction == 1 ? -1 : 1;
-    
-    let arrowAngle = direction * 90;
+    let arrowAngle = directionTo * 90;
     let arrowX = line.x2 - lineBounds.x + halfPadding;
     let arrowY = line.y2 - lineBounds.y + halfPadding;
     
@@ -619,8 +632,8 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
                     let d = [
                        "M", startX, startY,
                         "C",
-                        startX + bezierDeltaX, startY + bezierDeltaY + ",",
-                        endX   - bezierDeltaX, endY   - bezierDeltaY + ",",
+                        startX + bezierDeltaXFrom, startY + bezierDeltaYFrom + ",",
+                        endX   - bezierDeltaXTo,   endY   - bezierDeltaYTo   + ",",
                         endX                 , endY
                     ].join(" ");
                     return { d };
