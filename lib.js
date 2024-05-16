@@ -191,6 +191,8 @@ function createFusedCanvas({
     });
     
     function handleMousePan(e) {
+        if (hasParentWhich(e.target, t => t.classList.contains("fused-canvas-component"))) return;
+        
         e.preventDefault();
         
         let startX = e.clientX;
@@ -247,7 +249,6 @@ function createFusedCanvas({
     
     function handleNewBox(node) {
         const obs2 = new MutationObserver(evt => {
-            console.log(evt);
             canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
         });
         obs2.observe(node, {attributes: true, attributeFilter: ["style"]});
@@ -267,7 +268,7 @@ function createFusedCanvas({
             record.addedNodes.forEach(node => {
                 if (node.tagName == "EDGE") {
                     createBasicEdge(node, yScaling, arrowLength, arrowPitch);
-                } else if (node.classList.contains("fused-canvas-component")) {
+                } else if (node.classList && node.classList.contains("fused-canvas-component")) {
                     handleNewBox(node);
                 }
             })
