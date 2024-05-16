@@ -245,18 +245,33 @@ function createFusedCanvas({
         }
     };
     
+    function handleNewBox(node) {
+        const obs2 = new MutationObserver(evt => {
+            console.log(evt);
+            canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
+        });
+        obs2.observe(node, {attributes: true, attributeFilter: ["style"]});
+        
+        const obs3 = new ResizeObserver(elements => {
+            canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
+        });
+        obs3.observe(node);
+    }
+    
     const observer = new MutationObserver(list => {
         if (dagre) {
             handleDagre(canvas, dagre, yScaling);
+            canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
         }
-        canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
-//        list.forEach(record => {
-//            record.addedNodes.forEach(node => {
-//                if (node.tagName == "EDGE") {
-//                    createBasicEdge(node, yScaling, arrowLength, arrowPitch);
-//                }
-//            })
-//        });
+        list.forEach(record => {
+            record.addedNodes.forEach(node => {
+                if (node.tagName == "EDGE") {
+                    createBasicEdge(node, yScaling, arrowLength, arrowPitch);
+                } else if (node.classList.contains("fused-canvas-component")) {
+                    handleNewBox(node);
+                }
+            })
+        });
     });
     observer.observe(canvas, {childList: true});
     
@@ -319,11 +334,14 @@ function createFusedCanvas({
     if (fitToScreen) doFitToScreen();
     
     canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
+    canvas.querySelectorAll(".fused-canvas-component").forEach(node => {
+        handleNewBox(node);
+    });
     
     return {
         container: canvas,
         view,
-        fitToScreen: doFitToScreen
+        fitToScreen: doFitToScreen,
     };
 }
 
