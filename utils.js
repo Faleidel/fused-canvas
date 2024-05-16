@@ -224,6 +224,9 @@ function onDrag(target, usedBy, options) {
     
     function startHandler(e) {
         if (!options.guard || options.guard(e)) {
+            e.stopPropagation();
+            e.preventDefault();
+            
             let lastX = e.clientX;
             let lastY = e.clientY;
             let firstX = lastX;
@@ -238,8 +241,6 @@ function onDrag(target, usedBy, options) {
                     clientY: e.clientY,
                     deltaClientX: e.clientX - lastX,
                     deltaClientY: e.clientY - lastY,
-                    deltaPageX: (e.clientX - lastX) / zoom,
-                    deltaPageY: (e.clientY - lastY) / zoom,
                 });
                 
                 lastX = e.clientX;
