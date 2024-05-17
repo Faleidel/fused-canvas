@@ -8,4 +8,5 @@ module.exports = {
     $: utils.$,
     requireCSS: utils.requireCSS,
     onDrag: utils.onDrag,
+    hasParentWhich: utils.hasParentWhich,
 };
