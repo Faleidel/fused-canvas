@@ -609,11 +609,19 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch, canvas) {
             "0,1": 3
         }[closestPair[1].dx + "," + closestPair[1].dy];
         
-        if (div.getAttribute("direction-from")) {
-            directionFrom = parseInt(div.getAttribute("direction-from"));
+        if (div.getAttribute("data-direction-from")) {
+            directionFrom = parseInt(div.getAttribute("data-direction-from"));
+            attachFrom = {
+                x: fromPagePos.clientX + boundsFrom.width /2/view.zoom,
+                y: fromPagePos.clientY + boundsFrom.height/2/view.zoom
+            };
         }
-        if (div.getAttribute("direction-to")) {
-            directionTo = parseInt(div.getAttribute("direction-to"));
+        if (div.getAttribute("data-direction-to")) {
+            directionTo = parseInt(div.getAttribute("data-direction-to"));
+            attachTo = {
+                x: toPagePos.clientX + boundsTo.width /2/view.zoom,
+                y: toPagePos.clientY + boundsTo.height/2/view.zoom
+            };
         }
         
         line.x = attachFrom.x;

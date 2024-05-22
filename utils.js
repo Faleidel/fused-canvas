@@ -207,6 +207,18 @@ function onEvt(target, evts, usedBy, callback) {
     return () => evts.forEach(evt => target.removeEventListener(evt, handler));
 }
 
+function onSimpleClick(target, callback) {
+    let downEvent;
+    return onEvt(target, ["click", "mousedown"], evt => {
+        if (evt.type == "mousedown") downEvent = evt;
+        else {
+            if (Math.abs(evt.clientX - downEvent.clientX) < 3 && Math.abs(evt.clientY - downEvent.clientY) < 3) {
+                callback(evt);
+            }
+        }
+    });
+}
+
 function onEvtOnce(target, evts, callback) {
     let off = onEvt(target, evts, e => {
 	off();
@@ -370,4 +382,5 @@ module.exports = {
     onDrag,
     makePopUpMenu,
     clientPosToPagePos,
+    onSimpleClick,
 };
