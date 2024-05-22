@@ -324,10 +324,8 @@ function httpPost(url, body) {
 }
 
 // canvas is refs.canvas in page render
-function clientPosToPagePos(evt, canvas) {
-    let bounds = JSON.parse(JSON.stringify(canvas.getBoundingClientRect()));
-    //bounds.left -= 10 * zoom;
-    //bounds.top -= 10 * zoom;
+function clientPosToPagePos(evt, zoom, canvas) {
+    let bounds = canvas.getBoundingClientRect();
     
     let cursorX = evt.clientX || evt.touches[0].clientX;
     let cursorY = evt.clientY || evt.touches[0].clientY;
@@ -369,5 +367,7 @@ module.exports = {
     trustX,
     trustY,
     hasParentWhich,
-    onDrag
+    onDrag,
+    makePopUpMenu,
+    clientPosToPagePos,
 };

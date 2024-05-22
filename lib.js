@@ -7,7 +7,8 @@ const {
     getAngle,
     trustX,
     trustY,
-    hasParentWhich
+    hasParentWhich,
+    clientPosToPagePos
 } = require("./utils");
 const dagre = require("@dagrejs/dagre");
 
@@ -259,6 +260,10 @@ function createFusedCanvas({
         obs3.observe(node);
     }
     
+    function handleNewEdge(node) {
+        createBasicEdge(node, yScaling, arrowLength, arrowPitch);
+    }
+    
     const observer = new MutationObserver(list => {
         if (dagre) {
             handleDagre(canvas, dagre, yScaling);
@@ -267,7 +272,7 @@ function createFusedCanvas({
         list.forEach(record => {
             record.addedNodes.forEach(node => {
                 if (node.tagName == "EDGE") {
-                    createBasicEdge(node, yScaling, arrowLength, arrowPitch);
+                    handleNewEdge(node);
                 } else if (node.classList && node.classList.contains("fused-canvas-component")) {
                     handleNewBox(node);
                 }
@@ -343,6 +348,16 @@ function createFusedCanvas({
         container: canvas,
         view,
         fitToScreen: doFitToScreen,
+        toPagePos: evt => {
+            return clientPosToPagePos(evt, view.zoom, canvas);
+            
+            let bounds = canvas.getBoundingClientRect();
+            
+            return {
+                clientX: (evt.clientX - bounds.left - view.panX) / view.zoom,
+                clientY: (evt.clientY - bounds.top - view.panY) / view.zoom,
+            };
+        }
     };
 }
 
@@ -471,10 +486,9 @@ requireCSS(`
 function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
     //if (!div) div = document.createElement("div");
     div.innerHTML = "";
-    let from = document.getElementById(div.getAttribute("data-from"));
-    let to   = document.getElementById(div.getAttribute("data-to"  ));
-    let points = JSON.parse(div.getAttribute("data-points") || JSON.stringify({points: []})).points;
-    points.forEach(point => point.y = point.y/yScaling);
+    let from;
+    let to;
+    let points;
     
     div.classList.add("lineObject");
     
@@ -483,51 +497,61 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
     
     let view = { panX: 0, panY: 0, zoom: 1 };
     
-    let boundsFrom = from.getBoundingClientRect();
-    let boundsTo   = to.getBoundingClientRect();
+    let boundsFrom;
+    let boundsTo;
     
     let directionFrom = 0;
     let directionTo = 0;
     
     function updateEverything() {
+        from = document.getElementById(div.getAttribute("data-from"));
+        to   = document.getElementById(div.getAttribute("data-to"  ));
+        points = JSON.parse(div.getAttribute("data-points") || JSON.stringify({points: []})).points;
+        points.forEach(point => point.y = point.y/yScaling);
+        if (from) boundsFrom = from.getBoundingClientRect();
+        else if (div.getAttribute("data-from")[0] == "{") boundsFrom = JSON.parse(div.getAttribute("data-from"));
+            
+        if (to) boundsTo = to.getBoundingClientRect();
+        else if (div.getAttribute("data-to")[0] == "{") boundsTo = JSON.parse(div.getAttribute("data-to"));
+        
         let cs = getComputedStyle(div);
         view.zoom = cs.getPropertyValue('--zoom');
         view.panX = cs.getPropertyValue('--panX');
         view.panY = cs.getPropertyValue('--panY');
         
         let attachesFrom = [
-            { x: parseFloat(from.style.left || "0") + boundsFrom.width/2/view.zoom
-            , y: parseFloat(from.style.top || "0")
+            { x: parseFloat(from?.style?.left || boundsFrom.left || "0") + boundsFrom.width/2/view.zoom
+            , y: parseFloat(from?.style?.top || boundsFrom.top || "0")
             , dx: 0, dy: -1
             },
-            { x: parseFloat(from.style.left || "0") + boundsFrom.width/2/view.zoom
-            , y: parseFloat(from.style.top || "0") + boundsFrom.height/view.zoom
+            { x: parseFloat(from?.style?.left || boundsFrom.left || "0") + boundsFrom.width/2/view.zoom
+            , y: parseFloat(from?.style?.top || boundsFrom.top || "0") + boundsFrom.height/view.zoom
             , dx: 0, dy: 1
             },
-            { x: parseFloat(from.style.left || "0")
-            , y: parseFloat(from.style.top || "0") + boundsFrom.height/2/view.zoom
+            { x: parseFloat(from?.style?.left || boundsFrom.left || "0")
+            , y: parseFloat(from?.style?.top || boundsFrom.top || "0") + boundsFrom.height/2/view.zoom
             , dx: -1, dy: 0
             },
-            { x: parseFloat(from.style.left || "0") + boundsFrom.width/view.zoom
-            , y: parseFloat(from.style.top || "0") + boundsFrom.height/2/view.zoom
+            { x: parseFloat(from?.style?.left || boundsFrom.left || "0") + boundsFrom.width/view.zoom
+            , y: parseFloat(from?.style?.top || boundsFrom.top || "0") + boundsFrom.height/2/view.zoom
             , dx: 1, dy: 0
             },
         ];
         let attachesTo = [
-            { x: parseFloat(to.style.left || "0") + boundsTo.width/2/view.zoom
-            , y: parseFloat(to.style.top || "0")
+            { x: parseFloat(to?.style?.left || boundsTo.left || "0") + boundsTo.width/2/view.zoom
+            , y: parseFloat(to?.style?.top || boundsTo.top || "0")
             , dx: 0, dy: -1
             },
-            { x: parseFloat(to.style.left || "0") + boundsTo.width/2/view.zoom
-            , y: parseFloat(to.style.top || "0") + boundsTo.height/view.zoom
+            { x: parseFloat(to?.style?.left || boundsTo.left || "0") + boundsTo.width/2/view.zoom
+            , y: parseFloat(to?.style?.top || boundsTo.top || "0") + boundsTo.height/view.zoom
             , dx: 0, dy: 1
             },
-            { x: parseFloat(to.style.left || "0")
-            , y: parseFloat(to.style.top || "0") + boundsTo.height/2/view.zoom
+            { x: parseFloat(to?.style?.left || boundsTo.left || "0")
+            , y: parseFloat(to?.style?.top || boundsTo.top || "0") + boundsTo.height/2/view.zoom
             , dx: -1, dy: 0
             },
-            { x: parseFloat(to.style.left || "0") + boundsTo.width/view.zoom
-            , y: parseFloat(to.style.top || "0") + boundsTo.height/2/view.zoom
+            { x: parseFloat(to?.style?.left || boundsTo.left || "0") + boundsTo.width/view.zoom
+            , y: parseFloat(to?.style?.top || boundsTo.top || "0") + boundsTo.height/2/view.zoom
             , dx: 1, dy: 0
             },
         ];
@@ -587,7 +611,7 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
     }
     updateEverything();
     
-    let padding = 50;
+    let padding = 300;
     let halfPadding = padding/2;
     
     let bezierStrength = Math.abs(line.y - line.y2);
@@ -665,6 +689,10 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
         </svg> 
     `);
     
+    div.fusedCanvas = {
+        update: () => { updateEverything(); refs.$update(); console.log("update"); }
+    };
+    
     return {
         div
     };
@@ -672,5 +700,6 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
 
 module.exports = {
     createFusedCanvas,
-    createFusedBox
+    createFusedBox,
+    createBasicEdge
 };
