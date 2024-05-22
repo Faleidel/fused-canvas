@@ -523,9 +523,11 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch, canvas) {
         points.forEach(point => point.y = point.y/yScaling);
         if (from) boundsFrom = from.getBoundingClientRect();
         else if (div.getAttribute("data-from")[0] == "{") boundsFrom = JSON.parse(div.getAttribute("data-from"));
+        else { div.remove(); return; } // Invalid anchor, remove edge
             
         if (to) boundsTo = to.getBoundingClientRect();
         else if (div.getAttribute("data-to")[0] == "{") boundsTo = JSON.parse(div.getAttribute("data-to"));
+        else { div.remove(); return; } // Invalid anchor, remove edge
         
         let cs = getComputedStyle(div);
         view.zoom = cs.getPropertyValue('--zoom');
@@ -672,6 +674,37 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch, canvas) {
     }
     updateEverything();
     
+    function getLinePath() {
+        let startX = line.x - lineBounds.x + halfPadding;
+        let startY = line.y - lineBounds.y + halfPadding;
+        let endX = line.x2 - lineBounds.x + halfPadding;
+        let endY = line.y2 - lineBounds.y + halfPadding;
+        
+        if (points.length == 0) {
+            let d = [
+               "M", startX, startY,
+                "C",
+                startX + bezierDeltaXFrom, startY + bezierDeltaYFrom + ",",
+                endX   - bezierDeltaXTo,   endY   - bezierDeltaYTo   + ",",
+                endX                 , endY
+            ].join(" ");
+            return { d };
+        } else {
+            let dArray = [
+                "M", points[0].x + halfPadding - lineBounds.x, points[0].y + halfPadding - lineBounds.y,
+                "Q", points[1].x + halfPadding - lineBounds.x, points[1].y + halfPadding - lineBounds.y,
+                     points[2].x + halfPadding - lineBounds.x, points[2].y + halfPadding - lineBounds.y
+            ];
+            
+            let rest = points.slice(3);
+            for (let pi = 0 ; pi < rest.length ; pi += 1) {
+                dArray.push("T", rest[pi].x + halfPadding - lineBounds.x, rest[pi].y + halfPadding - lineBounds.y);
+            }
+            
+            return { d: dArray.join(" ") };
+        }
+    }
+    
     let refs = $(div, makeId => `
         <svg style="position: relative" ${makeId("svg", () => ({
             style: {
@@ -680,36 +713,12 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch, canvas) {
             },
             width: lineBounds.width + padding,
             height: lineBounds.height + padding }))}>
-            <path ${makeId("clickLine2", () => {
-                let startX = line.x - lineBounds.x + halfPadding;
-                let startY = line.y - lineBounds.y + halfPadding;
-                let endX = line.x2 - lineBounds.x + halfPadding;
-                let endY = line.y2 - lineBounds.y + halfPadding;
-                
-                if (points.length == 0) {
-                    let d = [
-                       "M", startX, startY,
-                        "C",
-                        startX + bezierDeltaXFrom, startY + bezierDeltaYFrom + ",",
-                        endX   - bezierDeltaXTo,   endY   - bezierDeltaYTo   + ",",
-                        endX                 , endY
-                    ].join(" ");
-                    return { d };
-                } else {
-                    let dArray = [
-                        "M", points[0].x + halfPadding - lineBounds.x, points[0].y + halfPadding - lineBounds.y,
-                        "Q", points[1].x + halfPadding - lineBounds.x, points[1].y + halfPadding - lineBounds.y,
-                             points[2].x + halfPadding - lineBounds.x, points[2].y + halfPadding - lineBounds.y
-                    ];
-                    
-                    let rest = points.slice(3);
-                    for (let pi = 0 ; pi < rest.length ; pi += 1) {
-                        dArray.push("T", rest[pi].x + halfPadding - lineBounds.x, rest[pi].y + halfPadding - lineBounds.y);
-                    }
-                    
-                    return { d: dArray.join(" ") };
-                }
+            <path class="line" ${makeId("line", () => {
+                return getLinePath();
             })} style="fill: none; stroke: black; stroke-width: 1px"/>
+            <path ${makeId("clickLine", () => {
+                return getLinePath();
+            })} style="pointer-events: visiblestroke; fill: none; stroke: none; stroke-width: 15px; cursor: pointer;"/>
             <path class="arrow" ${makeId("arrow", () => {
                 return {
                     d: [
@@ -721,6 +730,10 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch, canvas) {
             })} style="fill: black; stroke-width: 1px"/>
         </svg> 
     `);
+    
+    refs.clickLine.onclick = e => {
+        div.dispatchEvent(new Event('click'));
+    };
     
     div.fusedCanvas = {
         update: () => { updateEverything(); refs.$update(); }
