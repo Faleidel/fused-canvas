@@ -81,6 +81,22 @@ function createFusedCanvas({
     let onUnselect = undefined;
     let dragging = false;
     
+    let canvasObject = {
+        container: canvas,
+        view,
+        fitToScreen: doFitToScreen,
+        toPagePos: evt => {
+            return clientPosToPagePos(evt, view.zoom, canvas);
+            
+            let bounds = canvas.getBoundingClientRect();
+            
+            return {
+                clientX: (evt.clientX - bounds.left - view.panX) / view.zoom,
+                clientY: (evt.clientY - bounds.top - view.panY) / view.zoom,
+            };
+        }
+    };
+    
     function selectElement(element, cb) {
         selectedElement = element;
         
@@ -250,24 +266,24 @@ function createFusedCanvas({
     
     function handleNewBox(node) {
         const obs2 = new MutationObserver(evt => {
-            canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
+            canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch, canvasObject));
         });
         obs2.observe(node, {attributes: true, attributeFilter: ["style"]});
         
         const obs3 = new ResizeObserver(elements => {
-            canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
+            canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch, canvasObject));
         });
         obs3.observe(node);
     }
     
     function handleNewEdge(node) {
-        createBasicEdge(node, yScaling, arrowLength, arrowPitch);
+        createBasicEdge(node, yScaling, arrowLength, arrowPitch, canvasObject);
     }
     
     const observer = new MutationObserver(list => {
         if (dagre) {
             handleDagre(canvas, dagre, yScaling);
-            canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
+            canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch, canvasObject));
         }
         list.forEach(record => {
             record.addedNodes.forEach(node => {
@@ -339,26 +355,12 @@ function createFusedCanvas({
     }
     if (fitToScreen) doFitToScreen();
     
-    canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch));
+    canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch, canvasObject));
     canvas.querySelectorAll(".fused-canvas-component").forEach(node => {
         handleNewBox(node);
     });
     
-    return {
-        container: canvas,
-        view,
-        fitToScreen: doFitToScreen,
-        toPagePos: evt => {
-            return clientPosToPagePos(evt, view.zoom, canvas);
-            
-            let bounds = canvas.getBoundingClientRect();
-            
-            return {
-                clientX: (evt.clientX - bounds.left - view.panX) / view.zoom,
-                clientY: (evt.clientY - bounds.top - view.panY) / view.zoom,
-            };
-        }
-    };
+    return canvasObject;
 }
 
 function handleDagre(canvas, direction, yScaling) {
@@ -483,7 +485,7 @@ requireCSS(`
         background: black;
     }
 `);
-function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
+function createBasicEdge(div, yScaling, arrowLength, arrowPitch, canvas) {
     //if (!div) div = document.createElement("div");
     div.innerHTML = "";
     let from;
@@ -503,6 +505,17 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
     let directionFrom = 0;
     let directionTo = 0;
     
+    let arrowX;
+    let arrowY;
+    
+    let padding = 300;
+    let halfPadding = padding/2;
+    
+    let bezierDeltaXFrom;
+    let bezierDeltaYFrom;
+    let bezierDeltaXTo;
+    let bezierDeltaYTo;
+    
     function updateEverything() {
         from = document.getElementById(div.getAttribute("data-from"));
         to   = document.getElementById(div.getAttribute("data-to"  ));
@@ -519,39 +532,48 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
         view.panX = cs.getPropertyValue('--panX');
         view.panY = cs.getPropertyValue('--panY');
         
+        let fromPagePos = from ? canvas.toPagePos({ clientX: boundsFrom.left, clientY: boundsFrom.top }) : {
+            clientX: boundsFrom.left,
+            clientY: boundsFrom.top
+        };
+        let toPagePos   = to ? canvas.toPagePos({ clientX: boundsTo.left  , clientY: boundsTo.top   }) : {
+            clientX: boundsTo.left,
+            clientY: boundsTo.top
+        };
+        
         let attachesFrom = [
-            { x: parseFloat(from?.style?.left || boundsFrom.left || "0") + boundsFrom.width/2/view.zoom
-            , y: parseFloat(from?.style?.top || boundsFrom.top || "0")
+            { x: fromPagePos.clientX + boundsFrom.width/2/view.zoom
+            , y: fromPagePos.clientY
             , dx: 0, dy: -1
             },
-            { x: parseFloat(from?.style?.left || boundsFrom.left || "0") + boundsFrom.width/2/view.zoom
-            , y: parseFloat(from?.style?.top || boundsFrom.top || "0") + boundsFrom.height/view.zoom
+            { x: fromPagePos.clientX + boundsFrom.width/2/view.zoom
+            , y: fromPagePos.clientY + boundsFrom.height/view.zoom
             , dx: 0, dy: 1
             },
-            { x: parseFloat(from?.style?.left || boundsFrom.left || "0")
-            , y: parseFloat(from?.style?.top || boundsFrom.top || "0") + boundsFrom.height/2/view.zoom
+            { x: fromPagePos.clientX
+            , y: fromPagePos.clientY + boundsFrom.height/2/view.zoom
             , dx: -1, dy: 0
             },
-            { x: parseFloat(from?.style?.left || boundsFrom.left || "0") + boundsFrom.width/view.zoom
-            , y: parseFloat(from?.style?.top || boundsFrom.top || "0") + boundsFrom.height/2/view.zoom
+            { x: fromPagePos.clientX + boundsFrom.width/view.zoom
+            , y: fromPagePos.clientY + boundsFrom.height/2/view.zoom
             , dx: 1, dy: 0
             },
         ];
         let attachesTo = [
-            { x: parseFloat(to?.style?.left || boundsTo.left || "0") + boundsTo.width/2/view.zoom
-            , y: parseFloat(to?.style?.top || boundsTo.top || "0")
+            { x: toPagePos.clientX + boundsTo.width/2/view.zoom
+            , y: toPagePos.clientY
             , dx: 0, dy: -1
             },
-            { x: parseFloat(to?.style?.left || boundsTo.left || "0") + boundsTo.width/2/view.zoom
-            , y: parseFloat(to?.style?.top || boundsTo.top || "0") + boundsTo.height/view.zoom
+            { x: toPagePos.clientX + boundsTo.width/2/view.zoom
+            , y: toPagePos.clientY + boundsTo.height/view.zoom
             , dx: 0, dy: 1
             },
-            { x: parseFloat(to?.style?.left || boundsTo.left || "0")
-            , y: parseFloat(to?.style?.top || boundsTo.top || "0") + boundsTo.height/2/view.zoom
+            { x: toPagePos.clientX
+            , y: toPagePos.clientY + boundsTo.height/2/view.zoom
             , dx: -1, dy: 0
             },
-            { x: parseFloat(to?.style?.left || boundsTo.left || "0") + boundsTo.width/view.zoom
-            , y: parseFloat(to?.style?.top || boundsTo.top || "0") + boundsTo.height/2/view.zoom
+            { x: toPagePos.clientX + boundsTo.width/view.zoom
+            , y: toPagePos.clientY + boundsTo.height/2/view.zoom
             , dx: 1, dy: 0
             },
         ];
@@ -587,6 +609,13 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
             "0,1": 3
         }[closestPair[1].dx + "," + closestPair[1].dy];
         
+        if (div.getAttribute("direction-from")) {
+            directionFrom = parseInt(div.getAttribute("direction-from"));
+        }
+        if (div.getAttribute("direction-to")) {
+            directionTo = parseInt(div.getAttribute("direction-to"));
+        }
+        
         line.x = attachFrom.x;
         line.y = attachFrom.y;
         line.x2 = attachTo.x;
@@ -608,36 +637,32 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
         
         div.style.left = lineBounds.x + "px";
         div.style.top  = lineBounds.y + "px";
+        
+        arrowAngle = directionTo * 90;
+        arrowX = line.x2 - lineBounds.x + halfPadding;
+        arrowY = line.y2 - lineBounds.y + halfPadding;
+        
+        let bezierStrength = Math.abs(line.y - line.y2);
+        
+        bezierDeltaXFrom = (directionFrom == 0 || directionFrom == 2) ? bezierStrength : 0;
+        bezierDeltaYFrom = (directionFrom == 0 || directionFrom == 2) ? 0 : -bezierStrength;
+        bezierDeltaXFrom *= directionFrom == 2 ? -1 : 1;
+        bezierDeltaYFrom *= directionFrom == 1 ? -1 : 1;
+        
+        bezierDeltaXTo = (directionTo == 0 || directionTo == 2) ? bezierStrength : 0;
+        bezierDeltaYTo = (directionTo == 0 || directionTo == 2) ? 0 : -bezierStrength;
+        bezierDeltaXTo *= directionTo == 2 ? -1 : 1;
+        bezierDeltaYTo *= directionTo == 1 ? -1 : 1;
+        
+        if (points.length != 0) {
+            directionFrom = 1;
+            let lastPoint = points.length-1;
+            arrowAngle = getAngle(points[lastPoint-1].x, points[lastPoint-1].y, points[lastPoint].x, points[lastPoint].y);
+            arrowX = points[lastPoint].x - lineBounds.x + halfPadding;
+            arrowY = points[lastPoint].y - lineBounds.y + halfPadding;
+        }
     }
     updateEverything();
-    
-    let padding = 300;
-    let halfPadding = padding/2;
-    
-    let bezierStrength = Math.abs(line.y - line.y2);
-    
-    let bezierDeltaXFrom = (directionFrom == 0 || directionFrom == 2) ? bezierStrength : 0;
-    let bezierDeltaYFrom = (directionFrom == 0 || directionFrom == 2) ? 0 : -bezierStrength;
-    bezierDeltaXFrom *= directionFrom == 2 ? -1 : 1;
-    bezierDeltaYFrom *= directionFrom == 1 ? -1 : 1;
-    
-    let bezierDeltaXTo = (directionTo == 0 || directionTo == 2) ? bezierStrength : 0;
-    let bezierDeltaYTo = (directionTo == 0 || directionTo == 2) ? 0 : -bezierStrength;
-    bezierDeltaXTo *= directionTo == 2 ? -1 : 1;
-    bezierDeltaYTo *= directionTo == 1 ? -1 : 1;
-    
-    if (points.length != 0) directionFrom = 1;
-    
-    let arrowAngle = directionTo * 90;
-    let arrowX = line.x2 - lineBounds.x + halfPadding;
-    let arrowY = line.y2 - lineBounds.y + halfPadding;
-    
-    if (points.length != 0) {
-        let lastPoint = points.length-1;
-        arrowAngle = getAngle(points[lastPoint-1].x, points[lastPoint-1].y, points[lastPoint].x, points[lastPoint].y);
-        arrowX = points[lastPoint].x - lineBounds.x + halfPadding;
-        arrowY = points[lastPoint].y - lineBounds.y + halfPadding;
-    }
     
     let refs = $(div, makeId => `
         <svg style="position: relative" ${makeId("svg", () => ({
@@ -690,7 +715,7 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch) {
     `);
     
     div.fusedCanvas = {
-        update: () => { updateEverything(); refs.$update(); console.log("update"); }
+        update: () => { updateEverything(); refs.$update(); }
     };
     
     return {
