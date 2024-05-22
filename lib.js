@@ -60,7 +60,8 @@ function createFusedCanvas({
     yScaling = 3, // When using dagrejs compound=true there is more y space, I don't know why
     arrowLength = 7,
     arrowPitch = 30,
-    dagre = null
+    dagre = null,
+    ...options
 }) {
     let mouseDownActions = [mouseDown0Action, mouseDown1Action, mouseDown2Action];
     
@@ -97,21 +98,21 @@ function createFusedCanvas({
         }
     };
     
-    function selectElement(element, cb) {
-        selectedElement = element;
-        
-        if (onUnselect) onUnselect();
-        
-        onUnselect = cb;
-    }
-    function unselectElement() {
-        selectedElement = undefined;
-        
-        if (onUnselect) {
-            onUnselect();
-            onUnselect = undefined;
-        }
-    }
+//    function selectElement(element, cb) {
+//        selectedElement = element;
+//        
+//        if (onUnselect) onUnselect();
+//        
+//        onUnselect = cb;
+//    }
+//    function unselectElement() {
+//        selectedElement = undefined;
+//        
+//        if (onUnselect) {
+//            onUnselect();
+//            onUnselect = undefined;
+//        }
+//    }
     
     function applyViewport() {
         if (view.zoom < 0.03) view.zoom = 0.03;
@@ -125,11 +126,11 @@ function createFusedCanvas({
     }
     applyViewport();
     
-    onEvt(document.body, ["click"], viewport, e => {
-        if (e.target == canvas || e.target == viewport) {
-            unselectElement();
-        }
-    });
+//    onEvt(document.body, ["click"], viewport, e => {
+//        if (e.target == canvas || e.target == viewport) {
+//            unselectElement();
+//        }
+//    });
     
     let lastMouseMove = {clientX: 0, clientY: 0};
     onEvt(document.body, ["mousemove"], viewport, e => {
@@ -212,6 +213,8 @@ function createFusedCanvas({
         
         e.preventDefault();
         
+        let initialX = e.clientX;
+        let initialY = e.clientY;
         let startX = e.clientX;
         let startY = e.clientY;
         
@@ -227,6 +230,10 @@ function createFusedCanvas({
             e.preventDefault();
             document.removeEventListener("mousemove", mouseMove);
             document.removeEventListener("mouseup", mouseUp);
+            
+            if (initialX == e.clientX && initialY == e.clientY) {
+                options.onclick && options.onclick(e);
+            }
         };
         
         document.addEventListener("mousemove", mouseMove);
@@ -236,6 +243,8 @@ function createFusedCanvas({
     onEvt(viewport, "mousedown", e => {
         if (mouseDownActions[e.button] == "pan")
             handleMousePan(e);
+        else
+            options.onclick && options.onclick(e);
     });
     
     viewport.onwheel = e => {
