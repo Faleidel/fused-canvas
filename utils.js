@@ -383,4 +383,5 @@ module.exports = {
     makePopUpMenu,
     clientPosToPagePos,
     onSimpleClick,
+    attachInterval,
 };
