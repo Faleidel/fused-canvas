@@ -524,6 +524,8 @@ function createBasicEdge(div, yScaling, arrowLength, arrowPitch, canvas) {
     let bezierDeltaYFrom;
     let bezierDeltaXTo;
     let bezierDeltaYTo;
+
+    let arrowAngle = 0;
     
     function updateEverything() {
         from = document.getElementById(div.getAttribute("data-from"));
