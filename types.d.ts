@@ -22,6 +22,6 @@ declare module "fused-canvas" {
         arrowLength?: number;
         arrowPitch?: number;
         dagre?: string;
-        onNewBox: (x: any) => void;
+        onNewBox?: (x: any) => void;
     }): FusedCanvas;
 }
