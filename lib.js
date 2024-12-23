@@ -283,6 +283,8 @@ function createFusedCanvas({
             canvas.querySelectorAll("edge").forEach(edge => createBasicEdge(edge, yScaling, arrowLength, arrowPitch, canvasObject));
         });
         obs3.observe(node);
+        
+        if (options.onNewBox) options.onNewBox(node);
     }
     
     function handleNewEdge(node) {
