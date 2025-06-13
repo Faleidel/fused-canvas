@@ -17,6 +17,7 @@ declare module "fused-canvas" {
         mouseDown2Action?: string;
         scrollAction?: string;
         scrollCtrlAction?: string;
+        scrollShiftAction?: string;
         fitToScreen?: boolean;
         yScaling?: number;
         arrowLength?: number;

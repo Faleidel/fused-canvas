@@ -56,6 +56,7 @@ function createFusedCanvas({
     mouseDown2Action = null,
     scrollAction = "scroll",
     scrollCtrlAction = "zoom",
+    scrollShiftAction = undefined,
     fitToScreen = true,
     yScaling = 3, // When using dagrejs compound=true there is more y space, I don't know why
     arrowLength = 7,
@@ -254,22 +255,28 @@ function createFusedCanvas({
             applyViewport();
         }
         
-        if (e.ctrlKey) {
-            if (scrollCtrlAction == "zoom") {
-                zoom();
-            }
-        } else {
-            if (scrollAction == "zoom") {
-                zoom();
-            }
-            if (scrollAction == "scroll") {
+        function scroll() {
+            // maxHeight is for child components that have a scrollable zone which want's to capture the wheel event
+            let scrollingParent = hasParentWhich(e.target, t => t.classList.contains("maxHeight") || t.nodeName == "TEXTAREA" || t.style.overflowY == "scroll" || t.style.overflowY == "auto");
+            if (!scrollingParent) {
                 e.preventDefault();
-                // maxHeight is for child components that have a scrollable zone which want's to capture the wheel event
-                if (!hasParentWhich(e.target, t => t.classList.contains("maxHeight"))) {
-                    view.panY -= e.deltaY;
-                    applyViewport();
-                }
+                view.panY -= e.deltaY;
+                applyViewport();
+            } else {
+                e.preventDefault();
+                scrollingParent.scrollTop += e.deltaY;
             }
+        }
+        
+        if (e.shiftKey) {
+            if (scrollShiftAction == "zoom") zoom();
+            if (scrollShiftAction == "scroll") scroll();
+        } else if (e.ctrlKey) {
+            if (scrollCtrlAction == "zoom") zoom();
+            if (scrollCtrlAction == "scroll") scroll();
+        } else {
+            if (scrollAction == "zoom") zoom();
+            if (scrollAction == "scroll") scroll();
         }
     };
     
